@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+
+{% from "macros/form_inputs.html" import input_csrf_token with context %}
+
+{% from "macros/general.html" import
+display_subnav,
+set_account_status_img,
+highlight_username_in_mail,
+display_filter_by_first_char,
+show_pages
+with context
+%}
+
+{% from "macros/msg_handlers.html" import user_msg_handler with context %}
+
+{% block title %}{{ _('Mail Aliases') }}{% endblock %}
+{% block navlinks_domains %}class="active"{% endblock %}
+
+{% block breadcrumb %}
+{% set crumbs = [
+(ctx.homepath + '/domains', _('All domains')),
+(ctx.homepath + '/profile/domain/general/' + cur_domain, cur_domain),
+('active', ctx.homepath + '/aliases/' + cur_domain, _('Aliases')),
+] %}
+{{ display_subnav(crumbs) }}
+{% endblock %}
+
+{% block main %}
+
+{{ user_msg_handler(msg) }}
+
+{% if aliases is defined %}
+
+{% if aliases or (not aliases and first_char) %}
+{{ display_filter_by_first_char(baseurl=ctx.homepath + '/aliases/' + cur_domain,
+available_chars=all_first_chars,
+first_char=first_char,
+account_type='user',
+disabled_only=disabled_only) }}
+{% endif %}
+
+<div class="content-box">
+    <div class="box-body">
+        <div class="box-header clear">
+            <ul class="tabs clear">
+                <li><a href="{{ctx.homepath}}/create/alias/{{cur_domain}}"><i class="fa fa-plus"></i> {{ _('Alias')
+                        }}</a>
+            </ul>
+
+            <h2>
+                {{ _('Aliases under domain: %s') |format(cur_domain) }}
+                {% if total is defined and aliases|length > 0 %}
+                ({{ (cur_page-1) * page_size_limit + 1 }}-{{ (cur_page-1) * page_size_limit + aliases|length}}/{{ total
+                }})
+                {% endif %}
+                <a href="{{ctx.homepath}}/profile/domain/general/{{cur_domain}}"><i class="fa fa-cog fa-lg"
+                        title="{{ _('Edit domain profile') }}"></i></a>
+            </h2>
+        </div>
+
+        <div class="box-wrapper clear">
+            <div id="alias_list">
+                <form name="form_aliases" id="account_list" method="post"
+                    action="{{ctx.homepath}}/aliases/{{cur_domain}}/page/{{ cur_page }}">
+
+                    {{ input_csrf_token() }}
+                    <table class="style1">
+                        <thead>
+                            <tr>
+                                <th class="checkbox"><input type="checkbox" class="checkbox select-all" /></th>
+                                <th data-sort="string-ins">{{ _('Display Name') }}</th>
+                                <th data-sort="string-ins">{{ _('Mail Address') }}</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% if aliases %}
+                            {% for r in aliases %}
+                            {% set mail = r.address |e %}
+
+                            <tr>
+                                <td class="checkbox">
+                                    <input type="checkbox" name="mail" class="checkbox" value="{{ mail }}"
+                                        alt="{% if r.active %}active{% else %}disabled{% endif %}" />
+                                </td>
+                                <td class="vcenter">
+                                    <a href="{{ctx.homepath}}/profile/alias/general/{{mail}}">
+                                        <i class="fa fa-cog fa-lg fr-space" title="{{ _('Edit alias profile') }}"></i>
+                                    </a>
+                                    {{ set_account_status_img(r.active) }}
+
+                                    <a href="{{ctx.homepath}}/profile/alias/general/{{mail}}"
+                                        title="{{ _('Edit alias profile') }}">{% if r.name %}{{ r.name |cut_string |e
+                                        }}{% else %}{{ mail.split('@', 1)[0] }}{% endif %}</a>
+                                </td>
+                                <td class="vcenter">{{ highlight_username_in_mail(mail) }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td class="checkbox"></td>
+                                <td colspan="2">{{ _('No mail alias available.') }}
+                                    {% if not (first_char or disabled_only) %}
+                                    <a href="{{ctx.homepath}}/create/alias/{{ cur_domain }}">{{ _('Add one') }}</a>?
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                    <input type="hidden" name="cur_page" value="{{cur_page}}" />
+
+                    {% if aliases %}
+                    <div class="tab-footer clear f1">
+                        <div class="fl">
+                            <select name="action" class="fl-space" id="account_list_actions">
+                                <option>{{ _('Choose Action') }}</option>
+                                <option disabled>----</option>
+                                <option value="enable">{{ _('Enable') }}</option>
+                                <option value="disable">{{ _('Disable') }}</option>
+                                <option value="delete">{{ _('Delete') }}</option>
+                            </select>
+                            <input type="submit" name="submit_aliases" value="{{ _('Apply') }}"
+                                class="button fl-space" />
+                        </div>
+
+                        {% set baseurl = ctx.homepath + '/aliases/' + cur_domain %}
+                        {% if disabled_only %}
+                        {% set baseurl = baseurl + '/disabled' %}
+                        {% endif %}
+
+                        {{ show_pages(baseurl=baseurl,
+                        total=total,
+                        cur_page=cur_page) }}
+                    </div>
+                    {% endif %}
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock main %}

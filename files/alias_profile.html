@@ -1,0 +1,139 @@
+{% extends "layout.html" %}
+
+{% from "macros/form_inputs.html" import
+input_submit,
+input_csrf_token
+with context
+%}
+
+{% from "macros/general.html" import
+display_subnav,
+display_input_cn,
+display_account_status
+with context
+%}
+
+{% from "macros/msg_handlers.html" import user_msg_handler with context %}
+
+{% block title %}{{ _('Edit alias profile') }}{% endblock %}
+{% block navlinks_domains %}class="active"{% endblock %}
+
+{% block breadcrumb %}
+{% set crumbs = [
+(ctx.homepath + '/domains', _('All domains')),
+(ctx.homepath + '/profile/domain/general/' + cur_domain, cur_domain),
+(ctx.homepath + '/aliases/' + cur_domain, _('Aliases')),
+('active', ctx.homepath + '/profile/alias/general/' + mail, _('Profile of alias:') + '&nbsp;' + mail),
+] %}
+{{ display_subnav(crumbs) }}
+{% endblock %}
+
+{% block main %}
+
+{% if msg %}
+{{ user_msg_handler(msg) }}
+{% endif %}
+
+<div class="content-box">
+    <div class="box-body">
+        <div class="box-header clear">
+            <h2>{{ _('Profile of alias:') }} {{ mail }}</h2>
+        </div>
+
+        <div class="box-wrap clear">
+            <div id="profile_general">
+                <form name="general" method="post" action="{{ctx.homepath}}/profile/alias/general/{{mail}}">
+                    {{ input_csrf_token() }}
+
+                    <div class="columns clear">
+                        <div class="col2-3">
+                            {{ display_account_status(profile.active) }}
+
+                            <div class="bt-space10"></div>
+                            {{ display_input_cn(value=profile.name, account_type='alias') }}
+
+                        </div>
+                    </div>
+                    <div class="bt-space5"></div>
+                    <input type="submit" value="{{ _('Save changes') }}" class="button green" />
+                </form>
+            </div>{# #profile_general #}
+
+            <div class="rule2"></div>
+
+            <div id="profile_forwardings">
+                <h3>{{ _('Forwardings') }}</h3>
+                <div class="bt-space10"></div>
+
+                <div class="columns clear">
+                    <div class="col1-2">
+                        <table class="style1">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Destination Address') }}</th>
+                                    <th>{{ _('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if profile.forwardings %}
+                                {% for fwd in profile.forwardings %}
+                                <tr>
+                                    <td class="vcenter">{{ fwd.forwarding |e }}</td>
+                                    <td class="vcenter">
+                                        <form method="post" action="{{ctx.homepath}}/profile/alias/general/{{mail}}"
+                                            style="display:inline;">
+                                            {{ input_csrf_token() }}
+                                            <input type="hidden" name="action" value="delete_forwarding" />
+                                            <input type="hidden" name="forwarding" value="{{ fwd.forwarding |e }}" />
+                                            <input type="submit" class="button red" value="{{ _('Remove') }}" />
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="2">{{ _('No destinations defined.') }}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rule2"></div>
+
+                <h4><i class="fa fa-plus"></i> {{ _('Add new destinations') }}</h4>
+                <div class="bt-space5"></div>
+
+                <form name="add_forwarding" method="post" action="{{ctx.homepath}}/profile/alias/general/{{mail}}">
+                    {{ input_csrf_token() }}
+                    <input type="hidden" name="action" value="add_forwarding" />
+                    <div class="columns clear">
+                        <div class="col1-2">
+                            <span class="clean-padding">
+                                <textarea name="destinations" rows="4" cols="50" class="text"
+                                    placeholder="user@gmail.com, admin@domain.com"></textarea>
+                            </span>
+                            <div class="clear"></div>
+                            <span class="clean-padding color-grey">
+                                {{ _('Separate multiple addresses with a comma.') }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="bt-space5"></div>
+                    <input type="submit" value="{{ _('Add Destinations') }}" class="button green" />
+                </form>
+
+            </div>{# #profile_forwardings #}
+
+        </div>
+    </div>
+</div>
+{% endblock main %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var iRedAdminHomePath = '{{ ctx.homepath }}';
+</script>
+<script type="text/javascript" src="{{ ctx.homepath }}/static/js/alias_autocomplete.js"></script>
+{% endblock extra_js %}

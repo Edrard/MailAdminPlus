@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+
+{% from "macros/form_inputs.html" import input_csrf_token with context %}
+
+{% from "macros/general.html" import
+display_subnav,
+display_input_cn,
+with context
+%}
+{% from "macros/msg_handlers.html" import user_msg_handler with context %}
+
+{% block title %}{{ _('Add mail alias') }}{% endblock title %}
+{% block navlinks_create %}class="active"{% endblock %}
+
+{% block breadcrumb %}
+{% set crumbs = [
+(ctx.homepath + '/domains', _('All domains')),
+(ctx.homepath + '/profile/domain/general/' + cur_domain, cur_domain),
+(ctx.homepath + '/aliases/' + cur_domain, _('Aliases')),
+]
+%}
+{{ display_subnav(crumbs) }}
+{% endblock %}
+
+
+{% block main %}
+{% if msg %}
+{{ user_msg_handler(msg) }}
+{% endif %}
+
+<div class="content-box">
+    <div class="box-body">
+        <div class="box-header clear">
+            <ul class="tabs clear">
+                <li class="active"><a href="#alias_add"><i class="fa fa-plus"></i> {{ _('Alias') }}</a>
+            </ul>
+
+            <h2>{{ _('Add mail alias') }}</h2>
+        </div>
+
+        <div id="alias_add" class="box-wrap clear">
+            <form name="form_add_alias" method="post" action="{{ctx.homepath}}/create/alias/{{cur_domain}}">
+                {{ input_csrf_token() }}
+                <div class="columns clear">
+                    <div class="col2-3">
+                        <div class="form-field clear">
+                            <h4 class="size-250 fl-space">{{ _('Add mail alias under domain') }} <span
+                                    class="required">*</span></h4>
+                            <span class="clean-padding">
+                                <select name="domainName"
+                                    onchange="change_url(this, baseurl='{{ctx.homepath}}/create/alias/');">
+                                    {% for d in allDomains %}
+                                    <option value="{{ d |e }}" {% if d==cur_domain %}selected{%endif%}>{{ d |e }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </span>
+                        </div>
+                        <div class="form-field clear">
+                            <h4 class="size-250 fl-space">{{ _('Alias Address') }} <span class="required">*</span></h4>
+                            <span class="clean-padding">
+                                <input type="text" size="35" name="username" value="" autocomplete="off"
+                                    class="text fl-space" />@{{ cur_domain }}
+                            </span>
+                        </div>
+
+                        <div class="bt-space5">&nbsp;</div>
+
+                        {{ display_input_cn(value=cn, account_type='alias') }}
+
+                        <div class="bt-space5">&nbsp;</div>
+
+                        <div class="form-field clear">
+                            <h4 class="size-250 fl-space">{{ _('Destinations') }} <span class="required">*</span></h4>
+                            <span class="clean-padding">
+                                <textarea name="destinations" rows="4" cols="50" class="text"
+                                    placeholder="user@gmail.com, admin@domain.com"></textarea>
+                            </span>
+                            <div class="clear"></div>
+                            <span class="size-250 fl-space">&nbsp;</span>
+                            <span class="clean-padding color-grey">
+                                {{ _('Separate multiple addresses with a comma.') }}
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="rule2"></div>
+                <div class="form-field clear">
+                    <h4 class="size-250 fl-space">&nbsp;</h4>
+                    <span>
+                        <input type="submit" name="submit_add_alias" value="{{ _('Add') }}" class="button green" />
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock main %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var iRedAdminHomePath = '{{ ctx.homepath }}';
+</script>
+<script type="text/javascript" src="{{ ctx.homepath }}/static/js/alias_autocomplete.js"></script>
+{% endblock extra_js %}
